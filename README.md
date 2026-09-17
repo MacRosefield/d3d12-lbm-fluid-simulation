@@ -14,7 +14,7 @@ The application combines a Lattice Boltzmann Method (LBM) simulation implemented
 - [Features](#features)
 - [Results](#results)
 - [Gallery](#gallery)
-- [Application variants](#application-variants)
+- [Main application](#main-application)
 - [Technical overview](#technical-overview)
 - [Requirements](#requirements)
 - [Build](#build)
@@ -83,17 +83,9 @@ The following images show different states of the isosurface reconstructed in th
 | **Interaction with sphere and box** | **Later simulation state** |
 | ![Marching Cubes surface between spherical and box-shaped obstacles](docs/images/marching-cubes-state-03.png) | ![Later state of the reconstructed fluid surface](docs/images/marching-cubes-state-04.png) |
 
-## Application variants
+## Main application
 
-The applications represent successive stages of the implementation:
-
-| Target | Focus |
-| --- | --- |
-| `A0MeshViewer` | basic mesh and texture rendering |
-| `A1SceneGraphViewer` | scene graph, glTF import, materials, and lighting |
-| `V1BoltzmannFlow` | initial 2D LBM integration |
-| `V2BoltzmannKarmann` | Kármán visualization and mesh shader experiments |
-| `V3MarchingCubes` | 3D LBM, free surface, Marching Cubes, and performance metrics |
+`V3MarchingCubes` is the sole application target in this publication repository. It combines the 3D LBM simulation, dynamic cell types, free-surface reconstruction with Marching Cubes, debug visualization, and performance metrics.
 
 ## Technical overview
 
@@ -124,7 +116,7 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for a detailed description.
 
 - 64-bit Windows 10 or Windows 11
 - DirectX 12-capable GPU with a current driver
-- Mesh Shader Tier 1 support for `V2BoltzmannKarmann` and `V3MarchingCubes`
+- Mesh Shader Tier 1 support for `V3MarchingCubes`
 - Visual Studio 2022 with the **Desktop development with C++** workload, or a compatible MSVC developer shell
 - CMake 3.21 or newer
 - Ninja
@@ -207,10 +199,6 @@ Lattice dimension changes take effect after selecting `Accept changes`, which re
 ```text
 .
 |-- Assignments/
-|   |-- A0MeshViewer/
-|   |-- A1SceneGraphViewer/
-|   |-- V1BoltzmannFlow/
-|   |-- V2BoltzmannKarmann/
 |   `-- V3MarchingCubes/       # Main application
 |       |-- include/           # Headers and GPU data structures
 |       |-- shaders/           # Compute, mesh, vertex, and pixel shaders

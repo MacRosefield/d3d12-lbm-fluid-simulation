@@ -1,6 +1,6 @@
 # Architektur und Datenfluss
 
-Dieses Dokument beschreibt den technischen Aufbau der Hauptanwendung `V3MarchingCubes`. Die älteren Varianten unter `Assignments/` bilden Zwischenstände der Entwicklung ab.
+Dieses Dokument beschreibt den technischen Aufbau der Hauptanwendung `V3MarchingCubes`.
 
 Die mathematischen Hintergründe zu DQ-Modellen, Collision, Streaming und Randbedingungen sind unter [Methodische Grundlagen](THEORY.md) zusammengefasst.
 

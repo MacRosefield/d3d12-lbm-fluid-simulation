@@ -16,7 +16,7 @@ Beim ersten CMake-Lauf werden DirectX Agility SDK und DXC von NuGet geladen. Pr�
 
 ## `Mesh Shader not supported on this hardware or driver`
 
-`V2BoltzmannKarmann` und `V3MarchingCubes` prüfen die Mesh-Shader-Unterstützung zur Laufzeit. Aktualisieren Sie Windows und den GPU-Treiber. Unterstützt die Hardware Mesh Shader Tier 1 nicht, können diese Varianten nicht vollständig ausgeführt werden; ältere Anwendungen und Tutorials benötigen diese Funktion nicht durchgängig.
+`V3MarchingCubes` prüft die Mesh-Shader-Unterstützung zur Laufzeit. Aktualisieren Sie Windows und den GPU-Treiber. Unterstützt die Hardware Mesh Shader Tier 1 nicht, kann die Anwendung nicht vollständig ausgeführt werden.
 
 ## Die Anwendung findet eine glTF-Datei nicht
 
