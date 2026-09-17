@@ -1,58 +1,58 @@
-# Architektur und Datenfluss
+# Architecture and Data Flow
 
-Dieses Dokument beschreibt den technischen Aufbau der Hauptanwendung `V3MarchingCubes`.
+This document describes the technical architecture of the main application, `V3MarchingCubes`.
 
-Die mathematischen Hintergründe zu DQ-Modellen, Collision, Streaming und Randbedingungen sind unter [Methodische Grundlagen](THEORY.md) zusammengefasst.
+The mathematical background of DQ models, collision, streaming, and boundary conditions is summarized in [Theoretical Background](THEORY.md).
 
-## Überblick
+## Overview
 
-Die Anwendung verbindet drei Aufgaben in einer Direct3D-12-Pipeline:
+The application combines three tasks in a Direct3D 12 pipeline:
 
-1. Import und Darstellung einer statischen 3D-Szene
-2. Aktualisierung eines Lattice-Boltzmann-Gitters auf der GPU
-3. Rekonstruktion und Rendering der freien Fluidoberfläche
+1. Importing and rendering a static 3D scene
+2. Updating a Lattice Boltzmann grid on the GPU
+3. Reconstructing and rendering the free fluid surface
 
-Die Simulationsdaten bleiben während des laufenden Betriebs auf der GPU. Die CPU erstellt Ressourcen, aktualisiert Parameter, zeichnet Command Lists auf und liest ausgewählte Messwerte für die Benutzeroberfläche zurück.
+The simulation data remains on the GPU during execution. The CPU creates resources, updates parameters, records command lists, and reads selected measurements back for the user interface.
 
-## Komponenten
+## Components
 
-### Anwendungssteuerung
+### Application Control
 
-`SceneGraphViewerApp` ist der zentrale Orchestrator. Die Klasse verwaltet:
+`SceneGraphViewerApp` is the central orchestrator. The class manages:
 
-- DirectX-12-Root-Signatures und Pipeline-State-Objects,
-- Render Targets, Depth Buffer und Descriptor Heaps,
-- strukturierte LBM-Puffer und deren Ping-Pong-Zustand,
-- Marching-Cubes-Lookup-Tabellen,
-- ImGui-Konfiguration sowie
-- GPU-Timestamps, VRAM-Abfragen und Dreiecksstatistik.
+- DirectX 12 root signatures and pipeline state objects,
+- render targets, the depth buffer, and descriptor heaps,
+- structured LBM buffers and their ping-pong state,
+- Marching Cubes lookup tables,
+- the ImGui configuration, and
+- GPU timestamps, VRAM queries, and triangle statistics.
 
-Die Hilfsfunktionen für Fenster, Device, Swapchain und Command Queue liegen in `gimslib/`.
+The helper functions for the window, device, swap chain, and command queue are located in `gimslib/`.
 
-### Szenenimport und Rendering
+### Scene Import and Rendering
 
-`SceneFactory` importiert glTF-Szenen über Assimp und erzeugt Nodes, Meshes, Materialien und Texturen. `Scene` traversiert den Szenengraphen und reicht die Draw Calls ein. `TriangleMeshD3D12`, `Texture2DD3D12` und `ConstantBufferD3D12` kapseln die zugehörigen GPU-Ressourcen.
+`SceneFactory` imports glTF scenes through Assimp and creates nodes, meshes, materials, and textures. `Scene` traverses the scene graph and submits the draw calls. `TriangleMeshD3D12`, `Texture2DD3D12`, and `ConstantBufferD3D12` encapsulate the corresponding GPU resources.
 
-### 2D-LBM
+### 2D LBM
 
-Die 2D-Variante verwendet ein D2Q9-Gitter. Neun diskrete Geschwindigkeitsrichtungen beschreiben die Verteilungsfunktionen einer Zelle. `LBM.hlsl` berechnet den Kollisionsschritt, `LBMStreaming.hlsl` transportiert die Verteilungen in benachbarte Zellen. Diese Variante wurde anhand einer Kármánschen Wirbelstraße als Vorstufe der 3D-Implementierung eingesetzt.
+The 2D implementation uses a D2Q9 lattice. Nine discrete velocity directions describe the distribution functions of each cell. `LBM.hlsl` calculates the collision step, while `LBMStreaming.hlsl` propagates the distributions to neighboring cells. This implementation was validated with a Kármán vortex street and served as a preliminary stage for the 3D implementation.
 
-### 3D-LBM
+### 3D LBM
 
-Die 3D-Simulation verwendet ein D3Q19-Gitter. Der Zustand einer Zelle umfasst 19 Verteilungsfunktionen sowie Dichte `rho`, Geschwindigkeit `u`, Masse `m` und Füllgrad `epsilon`.
+The 3D simulation uses a D3Q19 lattice. The state of each cell comprises 19 distribution functions as well as density `rho`, velocity `u`, mass `m`, and fill level `epsilon`.
 
-| Shader | Aufgabe |
+| Shader | Purpose |
 | --- | --- |
-| `LBM3DCommon.hlsl` | D3Q19-Richtungen, Gewichte, Zelltypen und Hilfsfunktionen |
-| `LBM3D.hlsl` | Randbedingungen, Gleichgewichtsverteilung, BGK-Collision und Guo-Kraftterm |
-| `LBM3DStreaming.hlsl` | Streaming und Aktualisierung makroskopischer Größen |
-| `LBM3D_UpdateCellTypes.hlsl` | Übergänge zwischen Fluid-, Interface- und Leerzellen |
+| `LBM3DCommon.hlsl` | D3Q19 directions, weights, cell types, and helper functions |
+| `LBM3D.hlsl` | boundary conditions, equilibrium distribution, BGK collision, and Guo forcing term |
+| `LBM3DStreaming.hlsl` | streaming and updates of macroscopic quantities |
+| `LBM3D_UpdateCellTypes.hlsl` | transitions between fluid, interface, and empty cells |
 
-Zwei GPU-Puffer werden abwechselnd als Quelle und Ziel gebunden. UAV-Barriers stellen zwischen den Dispatches sicher, dass Schreibzugriffe für den jeweils folgenden Pass sichtbar sind.
+Two GPU buffers alternate as source and destination. UAV barriers between dispatches ensure that write operations are visible to the following pass.
 
-### Zelltypen
+### Cell Types
 
-Der separate Zelltyp-Puffer unterscheidet:
+The separate cell-type buffer distinguishes between:
 
 - Empty
 - Interface
@@ -62,73 +62,73 @@ Der separate Zelltyp-Puffer unterscheidet:
 - Inflow
 - Outflow
 
-Nach Collision und Streaming klassifiziert ein dritter Compute-Pass die dynamischen Zellen anhand ihrer aktuellen Masse. Statische Randzellen werden dabei nicht überschrieben.
+After collision and streaming, a third compute pass classifies the dynamic cells according to their current mass. Static boundary cells are not overwritten.
 
 ### Marching Cubes
 
-`MarchingLBM.hlsl` liest acht Eckwerte pro Gitterzelle, bestimmt den Marching-Cubes-Fall und erzeugt mithilfe von Edge- und Triangle-Lookup-Tabellen die Dreiecke der Isofläche. Die Geometrie entsteht im Mesh Shader und wird direkt an die Rasterizer-Stufe weitergegeben. Ein vollständiges dynamisches Dreiecksnetz muss daher weder auf der CPU aufgebaut noch zur GPU übertragen werden.
+`MarchingLBM.hlsl` reads eight corner values for each lattice cell, determines the Marching Cubes case, and generates the isosurface triangles with edge and triangle lookup tables. The geometry is created in the mesh shader and passed directly to the rasterizer stage. Consequently, a complete dynamic triangle mesh does not have to be constructed on the CPU or transferred to the GPU.
 
-### Debugging und Telemetrie
+### Debugging and Telemetry
 
-Die Anwendung kann Schnittebenen durch das 3D-Gitter anzeigen. Separate Shader visualisieren Zelltyp, Dichte, Masse und Füllgrad. Timestamp Queries messen Collision, Streaming, Cell-Type Update, Marching Cubes und weitere Abschnitte. Angezeigt werden außerdem MLUPS, VRAM-Nutzung sowie aktuelle, durchschnittliche und maximale Dreieckszahlen.
+The application can display slices through the 3D lattice. Separate shaders visualize cell type, density, mass, and fill level. Timestamp queries measure collision, streaming, cell-type updates, Marching Cubes, and other stages. The interface also displays MLUPS, VRAM usage, and current, average, and maximum triangle counts.
 
-## Datenfluss eines Frames
+## Frame Data Flow
 
 ```text
 CPU / ImGui
-  |  aktualisiert Constant Buffer und Simulationsparameter
+  |  updates constant buffers and simulation parameters
   v
-3D-LBM Collision
-  |  Grid A -> Grid B
+3D LBM collision
+  |  grid A -> grid B
   v
-3D-LBM Streaming
-  |  Grid B -> Grid A
+3D LBM streaming
+  |  grid B -> grid A
   v
-Zelltyp-Update
-  |  Interface-/Fluid-/Empty-Übergänge
+Cell-type update
+  |  interface / fluid / empty transitions
   v
-Marching-Cubes-Mesh-Shader
-  |  liest aktuelles Gitter und Lookup-Tabellen
+Marching Cubes mesh shader
+  |  reads the current lattice and lookup tables
   v
-Rasterisierung der Fluidoberfläche
+Fluid-surface rasterization
   |
-  +--> optionale Debug-Ebene
-  +--> importierte Szene
-  `--> Postprocessing und Präsentation
+  +--> optional debug slice
+  +--> imported scene
+  `--> post-processing and presentation
 ```
 
-Resource Barriers wechseln die D3D12-Ressourcen zwischen UAV-, SRV-, Render-Target- und Present-Zuständen. Die Reihenfolge wird in der Command List explizit festgelegt.
+Resource barriers transition the D3D12 resources between UAV, SRV, render-target, and present states. Their order is defined explicitly in the command list.
 
-## Performance-Messung
+## Performance Measurement
 
-Ein `ID3D12QueryHeap` vom Typ `D3D12_QUERY_HEAP_TYPE_TIMESTAMP` erfasst Zeitstempel nach den relevanten GPU-Passes. Die Daten werden mit einer Frame Verzögerung über einen Readback-Buffer ausgewertet. Der LBM-Durchsatz wird als Million Lattice Updates per Second berechnet:
+An `ID3D12QueryHeap` of type `D3D12_QUERY_HEAP_TYPE_TIMESTAMP` records timestamps after the relevant GPU passes. The data is evaluated one frame later through a readback buffer. The LBM throughput is calculated in million lattice updates per second:
 
 ```text
 MLUPS = Nx * Ny * Nz / (1,000,000 * tLBM)
 tLBM  = tCollision + tStreaming
 ```
 
-Zusätzlich protokolliert die Anwendung die vom Mesh Shader erzeugte Dreiecksanzahl und das lokale VRAM-Budget.
+The application also records the number of triangles generated by the mesh shader and the local VRAM budget.
 
-## Wichtige Verzeichnisse
+## Important Directories
 
-| Pfad | Inhalt |
+| Path | Contents |
 | --- | --- |
-| `Assignments/V3MarchingCubes/src/` | Ablaufsteuerung und Ressourcenverwaltung |
-| `Assignments/V3MarchingCubes/include/` | Klassen, UI-Daten und CPU-seitige GPU-Strukturen |
-| `Assignments/V3MarchingCubes/shaders/` | Simulation, Oberflächenextraktion und Rendering |
-| `gimslib/` | gemeinsames DirectX-12-Framework |
-| `data/` | Szenen und Texturen |
+| `Assignments/V3MarchingCubes/src/` | application control and resource management |
+| `Assignments/V3MarchingCubes/include/` | classes, UI data, and CPU-side GPU structures |
+| `Assignments/V3MarchingCubes/shaders/` | simulation, surface extraction, and rendering |
+| `gimslib/` | shared DirectX 12 application framework |
+| `data/` | scenes and textures |
 
-## Mögliche Weiterentwicklungen
+## Potential Future Work
 
-Die Bachelorarbeit nennt insbesondere:
+The bachelor's thesis identifies the following areas in particular:
 
-- GPU Work Graphs für adaptives Work Dispatching,
-- Cache-Optimierungen und bessere Datenlayouts,
-- Fusion von Collision und Streaming,
-- prozedurale Resurfacing-Techniken im Mesh Shader,
-- Machine-Learning-Surrogatmodelle und Detailrekonstruktion sowie
-- Dual Marching Cubes für topologisch konsistente Quad-Meshes.
+- GPU Work Graphs for adaptive work dispatching,
+- cache optimizations and improved data layouts,
+- fusion of collision and streaming,
+- procedural resurfacing techniques in the mesh shader,
+- machine-learning surrogate models and detail reconstruction, and
+- Dual Marching Cubes for topologically consistent quad meshes.
 
-Zusätzlich würden numerische Referenzfälle und GPU-/CPU-Vergleichstests die wissenschaftliche Validierung verbessern. Der fest codierte Szenenpfad könnte durch Kommandozeilenargumente oder eine Konfigurationsdatei ersetzt werden.
+In addition, numerical reference cases and GPU/CPU comparison tests would improve scientific validation. The hard-coded scene path could be replaced with command-line arguments or a configuration file.

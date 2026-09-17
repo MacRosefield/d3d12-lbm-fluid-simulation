@@ -1,87 +1,87 @@
-# Methodische Grundlagen
+# Theoretical Background
 
-Diese Seite fasst die theoretischen Grundlagen aus der begleitenden Präsentation und der Bachelorarbeit zusammen. Sie ordnet die im Projekt verwendeten Datenstrukturen und Shader-Passes fachlich ein.
+This page summarizes the theoretical foundations presented in the accompanying presentation and bachelor's thesis. It provides the scientific context for the data structures and shader passes used in the project.
 
-## Einordnung der Lattice-Boltzmann-Methode
+## Classification of the Lattice Boltzmann Method
 
-Strömungen lassen sich auf unterschiedlichen Skalen beschreiben:
+Fluid flows can be described at different scales:
 
-| Skala | Betrachtung | Typisches Modell |
+| Scale | Perspective | Typical model |
 | --- | --- | --- |
-| mikroskopisch | einzelne Teilchen und deren Wechselwirkungen | Molekulardynamik, Newtonsche Mechanik |
-| mesoskopisch | statistische Verteilung von Teilchenensembles | Boltzmann-Gleichung und LBM |
-| makroskopisch | direkt beobachtbare Größen wie Druck und Geschwindigkeit | Navier-Stokes-Gleichungen |
+| microscopic | individual particles and their interactions | molecular dynamics, Newtonian mechanics |
+| mesoscopic | statistical distribution of particle ensembles | Boltzmann equation and LBM |
+| macroscopic | directly observable quantities such as pressure and velocity | Navier-Stokes equations |
 
-Die Lattice-Boltzmann-Methode arbeitet auf der mesoskopischen Ebene. Ein Gitterknoten repräsentiert kein einzelnes Teilchen, sondern eine lokale Teilchenverteilung. Aus den Verteilungsfunktionen werden makroskopische Größen wie Dichte und Geschwindigkeit rekonstruiert. Die lokalen Operationen und regelmäßigen Speicherzugriffe lassen sich gut auf viele GPU-Threads verteilen.
+The Lattice Boltzmann Method operates at the mesoscopic scale. A lattice node does not represent an individual particle, but a local particle distribution. Macroscopic quantities such as density and velocity are reconstructed from the distribution functions. The local operations and regular memory-access patterns are well suited to execution across many GPU threads.
 
-## DQ-Modelle
+## DQ Models
 
-Die Bezeichnung `DdQq` beschreibt ein diskretes Geschwindigkeitsmodell:
+The notation `DdQq` describes a discrete velocity model:
 
-- `d` gibt die Anzahl der räumlichen Dimensionen an.
-- `q` gibt die Anzahl der diskreten Geschwindigkeitsrichtungen an.
+- `d` specifies the number of spatial dimensions.
+- `q` specifies the number of discrete velocity directions.
 
-Die 2D-Validierung dieses Projekts verwendet D2Q9. Die Hauptsimulation nutzt D3Q19 und speichert deshalb pro Gitterzelle 19 Verteilungsfunktionen.
+The 2D validation in this project uses D2Q9. The main simulation uses D3Q19 and therefore stores 19 distribution functions per lattice cell.
 
-![D3Q15-, D3Q19- und D3Q27-Geschwindigkeitsmodelle](images/dq-3d-models.png)
+![D3Q15, D3Q19, and D3Q27 velocity models](images/dq-3d-models.png)
 
-*Vergleich dreidimensionaler DQ-Modelle. Quelle der Darstellung: Krüger et al. (2017), übernommen aus der begleitenden Präsentation.*
+*Comparison of three-dimensional DQ models. Illustration source: Krüger et al. (2017), reproduced from the accompanying presentation.*
 
-## Collision und Streaming
+## Collision and Streaming
 
-Eine LBM-Iteration besteht aus zwei zentralen Phasen:
+An LBM iteration consists of two main phases:
 
-1. **Collision:** Die lokalen Verteilungsfunktionen relaxieren in Richtung einer Gleichgewichtsverteilung. Im Projekt geschieht dies mit dem BGK-Operator. Der Guo-Kraftterm ergänzt die Wirkung der Schwerkraft.
-2. **Streaming:** Die aktualisierten Verteilungen wandern entlang ihrer diskreten Geschwindigkeitsrichtungen zu den benachbarten Gitterzellen.
+1. **Collision:** The local distribution functions relax toward an equilibrium distribution. This project uses the BGK operator. The Guo forcing term adds the effect of gravity.
+2. **Streaming:** The updated distributions propagate to neighboring lattice cells along their discrete velocity directions.
 
-![Schematischer Collision- und Streaming-Schritt der Lattice-Boltzmann-Methode](images/lbm-collision-streaming.png)
+![Schematic collision and streaming steps of the Lattice Boltzmann Method](images/lbm-collision-streaming.png)
 
-*Schematischer Ablauf von Collision und Streaming. Quelle der Darstellung: Krüger et al. (2017), übernommen aus der begleitenden Präsentation.*
+*Schematic sequence of collision and streaming. Illustration source: Krüger et al. (2017), reproduced from the accompanying presentation.*
 
-In der GPU-Implementierung arbeiten beide Schritte auf zwei strukturierten Puffern. Collision liest den aktuellen Zustand und schreibt in den zweiten Puffer. Streaming bindet die Puffer anschließend in vertauschter Richtung. UAV-Barriers sichern die Sichtbarkeit der Ergebnisse zwischen den Dispatches.
+In the GPU implementation, both steps operate on two structured buffers. Collision reads the current state and writes to the second buffer. Streaming then binds the buffers in the opposite direction. UAV barriers ensure that the results are visible between dispatches.
 
-## Ablauf einer Simulationsiteration
+## Simulation Iteration
 
-Der fachliche Ablauf lässt sich auf folgende Schritte reduzieren:
+The computational process can be summarized as follows:
 
-1. Verteilungsfunktionen initialisieren
-2. Dichte und Geschwindigkeit aus den Verteilungen bestimmen
-3. Gleichgewichtsverteilung berechnen
-4. Collision mit Relaxation und Kräften ausführen
-5. Verteilungen in die Nachbarzellen streamen
-6. Randbedingungen anwenden
-7. Zelltypen anhand von Masse und Füllgrad aktualisieren
-8. nächsten Zeitschritt beginnen
+1. Initialize the distribution functions.
+2. Determine density and velocity from the distributions.
+3. Calculate the equilibrium distribution.
+4. Perform collision with relaxation and external forces.
+5. Stream the distributions to neighboring cells.
+6. Apply boundary conditions.
+7. Update cell types according to mass and fill level.
+8. Begin the next time step.
 
-Die konkrete Anwendung ergänzt nach den Compute-Passes die Marching-Cubes-Auswertung und das Rendering der erzeugten Isofläche.
+After the compute passes, the application evaluates the Marching Cubes surface and renders the resulting isosurface.
 
-## Randbedingungen
+## Boundary Conditions
 
-Randbedingungen legen fest, wie Verteilungen an Wänden, Hindernissen sowie Ein- und Ausströmflächen behandelt werden.
+Boundary conditions define how distributions are handled at walls, obstacles, inflow boundaries, and outflow boundaries.
 
-- **Bounce-back / No-slip:** Gegen eine feste Wand laufende Verteilungen werden in die Gegenrichtung reflektiert. Die Geschwindigkeit an der Wand entspricht null.
-- **Inflow:** Vorgegebene Dichte- und Geschwindigkeitswerte speisen Fluid in die Simulationsdomäne ein.
-- **Outflow:** Verteilungen verlassen die Domäne, ohne an der Grenze zurückgeworfen zu werden.
-- **Obstacle und Wall:** Zellen bilden feste Geometrie ab und nehmen nicht an der normalen Fluidaktualisierung teil.
+- **Bounce-back / no-slip:** Distributions traveling toward a solid wall are reflected in the opposite direction. The velocity at the wall is zero.
+- **Inflow:** Prescribed density and velocity values introduce fluid into the simulation domain.
+- **Outflow:** Distributions leave the domain without being reflected at the boundary.
+- **Obstacle and wall:** These cells represent solid geometry and do not participate in the regular fluid update.
 
-![Ein- und Ausströmrandbedingungen in einem diskreten Strömungsgitter](images/lbm-inflow-outflow.png)
+![Inflow and outflow boundary conditions in a discrete flow lattice](images/lbm-inflow-outflow.png)
 
-*Prinzipdarstellung der Ein- und Ausströmrandbedingungen aus der begleitenden Präsentation.*
+*Conceptual illustration of the inflow and outflow boundary conditions from the accompanying presentation.*
 
-## Visualisierung physikalischer Größen
+## Visualization of Physical Quantities
 
-Vor der dreidimensionalen Marching-Cubes-Darstellung wurden unterschiedliche 2D-Visualisierungen verwendet, um die LBM zu kontrollieren. Dazu gehören Farbkarten für skalare Größen und Vektorfelder für die Strömungsrichtung.
+Before the three-dimensional Marching Cubes visualization was implemented, several 2D visualizations were used to validate the LBM implementation. These include color maps for scalar quantities and vector fields for the flow direction.
 
-![Vergleich einer skalaren Feldvisualisierung und eines Geschwindigkeitsvektorfelds](images/lbm-visualization-fields.png)
+![Comparison of a scalar-field visualization and a velocity vector field](images/lbm-visualization-fields.png)
 
-*Beispiele einer skalaren Feldansicht und eines Geschwindigkeitsfelds aus der begleitenden Präsentation.*
+*Examples of a scalar-field view and a velocity field from the accompanying presentation.*
 
-Die Hauptanwendung führt dieses Prinzip in drei Dimensionen fort. Dichte, Masse, Füllgrad und Zelltyp können auf einer Debug-Schnittebene betrachtet werden. Für die sichtbare Oberfläche wertet Marching Cubes das skalare Feld im gesamten 3D-Gitter aus.
+The main application extends this principle to three dimensions. Density, mass, fill level, and cell type can be inspected on a debug slice. For the visible surface, Marching Cubes evaluates the scalar field across the entire 3D lattice.
 
-## Literaturhinweis
+## Reference
 
-Die in zwei Abbildungen mit `[TIM+2017]` gekennzeichnete Quelle ist:
+The source marked as `[TIM+2017]` in two of the figures is:
 
-> Timm Krüger, Halim Kusumaatmaja, Alexandr Kuzmin, Orest Shardt, Gonçalo Silva und Erlend Magnus Viggen: *The Lattice Boltzmann Method: Principles and Practice*. Springer International Publishing, 2017.
+> Timm Krüger, Halim Kusumaatmaja, Alexandr Kuzmin, Orest Shardt, Gonçalo Silva, and Erlend Magnus Viggen: *The Lattice Boltzmann Method: Principles and Practice*. Springer International Publishing, 2017.
 
-Vor einer öffentlichen Weitergabe sollten die Nutzungsrechte aller aus Präsentationsquellen übernommenen Abbildungen abschließend geprüft werden.
+Before public distribution, the usage rights for all figures reproduced from presentation sources should be reviewed.

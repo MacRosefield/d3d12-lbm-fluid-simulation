@@ -1,50 +1,50 @@
-# Fehlerbehebung
+# Troubleshooting
 
-## CMake findet `glm`, `imgui` oder `assimp` nicht
+## CMake Cannot Find `glm`, `imgui`, or `assimp`
 
-Das vcpkg-Toolchain-File wurde nicht eingebunden oder `VCPKG_ROOT` zeigt auf das falsche Verzeichnis. Die Konfiguration benötigt dieses Argument:
+The vcpkg toolchain file was not included, or `VCPKG_ROOT` points to the wrong directory. Configuration requires the following argument:
 
 ```powershell
 -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_ROOT\scripts\buildsystems\vcpkg.cmake"
 ```
 
-Prüfen Sie außerdem, ob vcpkg erfolgreich gebootstrapped wurde. Die Abhängigkeiten werden beim Konfigurieren anhand von `vcpkg.json` installiert.
+Also verify that vcpkg was bootstrapped successfully. The dependencies defined in `vcpkg.json` are installed during configuration.
 
-## NuGet-Download schlägt fehl
+## NuGet Download Fails
 
-Beim ersten CMake-Lauf werden DirectX Agility SDK und DXC von NuGet geladen. Prüfen Sie Internetzugang, Proxy- und Firewall-Einstellungen. Bei einem unvollständigen Download kann der betroffene Paketordner unter `<Build-Verzeichnis>/nuget/` entfernt und die Konfiguration erneut gestartet werden.
+The first CMake run downloads the DirectX Agility SDK and DXC from NuGet. Check the internet connection and the proxy and firewall settings. If a download is incomplete, remove the affected package directory under `<build-directory>/nuget/` and run the configuration again.
 
 ## `Mesh Shader not supported on this hardware or driver`
 
-`V3MarchingCubes` prüft die Mesh-Shader-Unterstützung zur Laufzeit. Aktualisieren Sie Windows und den GPU-Treiber. Unterstützt die Hardware Mesh Shader Tier 1 nicht, kann die Anwendung nicht vollständig ausgeführt werden.
+`V3MarchingCubes` checks mesh-shader support at runtime. Update Windows and the GPU driver. If the hardware does not support Mesh Shader Tier 1, the application cannot run with its complete feature set.
 
-## Die Anwendung findet eine glTF-Datei nicht
+## The Application Cannot Find a glTF File
 
-Die Beispielanwendungen verwenden relative Pfade wie `../../../data/NobleCraftsman/scene.gltf`. Starten Sie das Programm aus dem erzeugten `bin`-Verzeichnis. Bei einer anderen Build-Struktur muss der Pfad in `Assignments/<Variante>/src/main.cpp` angepasst werden.
+The application uses relative paths such as `../../../data/NobleCraftsman/scene.gltf`. Start the program from the generated `bin` directory. If the build uses a different directory structure, adjust the path in `Assignments/V3MarchingCubes/src/main.cpp`.
 
-## Shader-Kompilierung schlägt fehl
+## Shader Compilation Fails
 
-Prüfen Sie:
+Verify that:
 
-- ob `Microsoft.Direct3D.DXC` vollständig geladen wurde,
-- ob `dxcompiler.dll` neben der Anwendung verfügbar ist,
-- ob GPU und Treiber Shader Model 6.5 unterstützen und
-- ob der Build aus einer aktuellen MSVC-Developer-Shell gestartet wurde.
+- `Microsoft.Direct3D.DXC` was downloaded completely,
+- `dxcompiler.dll` is available next to the application,
+- the GPU and driver support Shader Model 6.5, and
+- the build was started from a current MSVC developer shell.
 
-Die ausführliche DXC-Fehlermeldung wird in der Konsole ausgegeben.
+The complete DXC error message is printed to the console.
 
-## Schwarzes Bild oder keine Fluidoberfläche
+## Black Screen or No Fluid Surface
 
-- Aktivieren Sie unter **Configuration** `Active Simulation` und `Display MESH`.
-- Setzen Sie die Werte über `Defaults` zurück.
-- Prüfen Sie Inflow, Outflow und `LBM Tau` auf gültige Werte.
-- Warten Sie nach einer Neuinitialisierung einige Frames.
-- Verwenden Sie die Debug-Ebene, um Zelltyp, Dichte, Masse oder Füllgrad zu kontrollieren.
+- Enable `Active Simulation` and `Display MESH` under **Configuration**.
+- Restore the settings with `Defaults`.
+- Check that Inflow, Outflow, and `LBM Tau` contain valid values.
+- Wait for several frames after reinitializing the simulation.
+- Use the debug slice to inspect cell type, density, mass, or fill level.
 
-## Instabile Simulation oder ungültige Werte
+## Unstable Simulation or Invalid Values
 
-Zu hohe Strömungsgeschwindigkeiten, eine ungeeignete Relaxationszeit oder viele Simulationsschritte pro Frame können die numerische Stabilität beeinträchtigen. Beginnen Sie mit den Default-Werten, verändern Sie jeweils nur einen Parameter und beobachten Sie Debug-Ansichten und GPU-Zeiten.
+Excessive flow velocities, an unsuitable relaxation time, or too many simulation steps per frame can affect numerical stability. Begin with the default values, change one parameter at a time, and monitor the debug views and GPU timings.
 
-## Build bricht wegen Warnungen ab
+## Build Fails Because of Warnings
 
-Das Projekt kompiliert mit `/W4 /WX`; Warnungen werden als Fehler behandelt. Beheben Sie die zuerst gemeldete Warnung oder prüfen Sie, ob sie durch eine abweichende Compiler-Version verursacht wird. Das lokale Deaktivieren von `/WX` kann für die Diagnose hilfreich sein, sollte aber keine dauerhafte Lösung sein.
+The project compiles with `/W4 /WX`, which treats warnings as errors. Resolve the first reported warning or determine whether it is caused by a different compiler version. Disabling `/WX` locally can help with diagnosis, but should not be used as a permanent solution.
