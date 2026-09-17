@@ -1,0 +1,28 @@
+cff-version: 1.2.0
+message: "Wenn Sie dieses Repository verwenden, zitieren Sie bitte die zugehörige Bachelorarbeit."
+type: software
+title: "Simulation und Visualisierung von Fluiden mit neuartigen GPUs"
+authors:
+  - family-names: "Heß"
+    given-names: "Maximilian"
+date-released: 2025-09-30
+repository-code: "https://github.com/MacRosefield/d3d12-lbm-fluid-simulation"
+abstract: >-
+  GPU-basierter Forschungsprototyp einer Lattice-Boltzmann-Simulation
+  mit Direct3D 12 Compute Shadern und Marching-Cubes-Visualisierung
+  im Mesh Shader.
+keywords:
+  - "Lattice Boltzmann method"
+  - "Marching Cubes"
+  - "Direct3D 12"
+  - "mesh shaders"
+  - "fluid simulation"
+preferred-citation:
+  type: thesis
+  title: "Simulation und Visualisierung von Fluiden mit neuartigen GPUs"
+  authors:
+    - family-names: "Heß"
+      given-names: "Maximilian"
+  year: 2025
+  publisher:
+    name: "Hochschule für angewandte Wissenschaften Coburg"

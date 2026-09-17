@@ -1,0 +1,21 @@
+﻿// DebugQuad.cpp
+
+#include "DebugQuad.hpp"
+#include "ConstantBufferStruct.h"
+#include "LBMCelltypes.h"
+#include "LookupTables.h"
+#include "MeshPipelineTypes.hpp"
+#include "PerMeshConstantBufferStruct.h"
+#include "SceneFactory.hpp"
+#include "SceneGraphViewerApp.hpp"
+#include <LBMCellStruct.hpp>
+#include <d3dx12/d3dx12.h>
+#include <gimslib/contrib/stb/stb_image.h>
+#include <gimslib/d3d/DX12Util.hpp>
+#include <gimslib/d3d/UploadHelper.hpp>
+#include <gimslib/dbg/HrException.hpp>
+#include <gimslib/io/CograBinaryMeshFile.hpp>
+#include <gimslib/sys/Event.hpp>
+#include <imgui.h>
+#include <iostream>
+#include <vector>
