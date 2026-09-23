@@ -134,7 +134,6 @@ void main(
             numVerts += 3;
         }
     }
-<<<<<<< Updated upstream
     
     if (threadId.x >= gridSize.x - 1 ||
         threadId.y >= gridSize.y - 1 ||
@@ -144,8 +143,7 @@ void main(
         numTris = 0;
         numVerts = 0;
     }
-=======
->>>>>>> Stashed changes
+
   
     InterlockedAdd(gTriCount[0], numTris);
    

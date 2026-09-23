@@ -433,11 +433,9 @@ void SceneGraphViewerApp::onDraw()
     commandList6->SetGraphicsRootDescriptorTable(4, m_triCountUAV_GPU_UAV);
 
     // TRIANGLE COUNTER BEGIN
-<<<<<<< Updated upstream
+
     //
-=======
-    // 
->>>>>>> Stashed changes
+
     // // COMMON -> COPY_DEST (nur im ersten Frame nötig)
     auto bInit = CD3DX12_RESOURCE_BARRIER::Transition(m_triCountUAV.Get(), D3D12_RESOURCE_STATE_COMMON,
                                                       D3D12_RESOURCE_STATE_COPY_DEST);
@@ -448,36 +446,23 @@ void SceneGraphViewerApp::onDraw()
     {
       // UAV state für Mesh-Shader
       auto barrierCount = CD3DX12_RESOURCE_BARRIER::Transition(m_triCountUAV.Get(), D3D12_RESOURCE_STATE_COPY_DEST,
-<<<<<<< Updated upstream
+
                                                                D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
       commandList6->ResourceBarrier(1, &barrierCount);
     }
     // COUNTER END
-=======
-                                                          D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
-      commandList6->ResourceBarrier(1, &barrierCount);
-    }
-    // COUNTER END
 
->>>>>>> Stashed changes
 
     commandList6->DispatchMesh(m_uiData.gridAdjusterX, m_uiData.gridAdjusterY, m_uiData.gridAdjusterZ);
     Stamp(commandList6.Get(), frameIndex, GpuMark::LBMMC_Dispatch_End);
 
-<<<<<<< Updated upstream
+
     // BEGIN TRIANGLE COUNT
     // zurück in COPY_SOURCE
     {
       auto barrierCountTwo = CD3DX12_RESOURCE_BARRIER::Transition(
           m_triCountUAV.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COPY_SOURCE);
-=======
 
-    // BEGIN TRIANGLE COUNT
-    // zurück in COPY_SOURCE
-    {
-      auto barrierCountTwo = CD3DX12_RESOURCE_BARRIER::Transition(m_triCountUAV.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
-                                                          D3D12_RESOURCE_STATE_COPY_SOURCE);
->>>>>>> Stashed changes
       commandList6->ResourceBarrier(1, &barrierCountTwo);
     }
 
@@ -486,13 +471,10 @@ void SceneGraphViewerApp::onDraw()
 
     // zurück für nächsten Frame (COPY_DEST)
     {
-<<<<<<< Updated upstream
+
       auto barrierCountThree = CD3DX12_RESOURCE_BARRIER::Transition(
           m_triCountUAV.Get(), D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_COPY_DEST);
-=======
-      auto barrierCountThree = CD3DX12_RESOURCE_BARRIER::Transition(m_triCountUAV.Get(), D3D12_RESOURCE_STATE_COPY_SOURCE,
-                                                          D3D12_RESOURCE_STATE_COPY_DEST);
->>>>>>> Stashed changes
+
       commandList6->ResourceBarrier(1, &barrierCountThree);
     }
 
@@ -642,10 +624,7 @@ void SceneGraphViewerApp::onDrawUI()
   collectGpuTimes();
   queryVram();
   collectMeshStats();
-<<<<<<< Updated upstream
-=======
 
->>>>>>> Stashed changes
 
   // Fenster/Section für Timings
   ImGui::Begin("GPU Timings"); // oder packe es in dein "Information"-Fenster als CollapsingHeader
@@ -737,10 +716,7 @@ void SceneGraphViewerApp::onDrawUI()
   ImGui::PlotLines("Triangles [M]", m_triHist, IM_ARRAYSIZE(m_triHist), m_triHistIdx, nullptr, 0.0f,
                    float(std::max(1.0, m_triMax * 1.2)), ImVec2(0, 60));
 
-<<<<<<< Updated upstream
-=======
 
->>>>>>> Stashed changes
   ImGui::End();
 
   // END GPU TIMING VISUALISATION
@@ -1598,14 +1574,8 @@ void SceneGraphViewerApp::createSRVandUAV()
   device->CreateShaderResourceView(m_CellTypeBuffer3D.Get(), &grid3dSrvDesc, srvHandle);
   m_cellTypeBufferA3D_GPU_SRV = gpuSrvHandle;
 
-<<<<<<< Updated upstream
-=======
 
 
-
-
-
->>>>>>> Stashed changes
   D3D12_UNORDERED_ACCESS_VIEW_DESC uav {};
   uav.ViewDimension              = D3D12_UAV_DIMENSION_BUFFER;
   uav.Format                     = DXGI_FORMAT_UNKNOWN; // Structured!
@@ -1614,25 +1584,12 @@ void SceneGraphViewerApp::createSRVandUAV()
   uav.Buffer.StructureByteStride = sizeof(UINT);
   uav.Buffer.Flags               = D3D12_BUFFER_UAV_FLAG_NONE;
 
-<<<<<<< Updated upstream
-=======
-  
->>>>>>> Stashed changes
+
   srvHandle.Offset(1, descriptorSize);
   gpuSrvHandle.Offset(1, descriptorSize);
   device->CreateUnorderedAccessView(m_triCountUAV.Get(), nullptr, &uav, srvHandle);
   m_triCountUAV_GPU_UAV = gpuSrvHandle;
-<<<<<<< Updated upstream
-=======
 
-
-
-
-
-
-  
-
->>>>>>> Stashed changes
 }
 
 void SceneGraphViewerApp::createLBMComputeRootSignature()
@@ -2134,12 +2091,10 @@ void SceneGraphViewerApp::InitializeLBMGrid3D()
   typeUpload.uploadDefaultBuffer(cellTypes.data(), m_CellTypeBuffer3D, typeBufferSize, getCommandQueue());
 }
 
-<<<<<<< Updated upstream
-void SceneGraphViewerApp::InitializeLBMGrid3D_v2()
-=======
+
 
 void SceneGraphViewerApp::InitializeLBMGrid3D_v2() 
->>>>>>> Stashed changes
+
 {
   // Grid aus UI
   int gridWidth  = m_uiData.gridAdjusterX;
@@ -2247,11 +2202,7 @@ void SceneGraphViewerApp::InitializeLBMGrid3D_v2()
   typeUpload.uploadDefaultBuffer(cellTypes.data(), m_CellTypeBuffer3D, typeBufferSize, getCommandQueue());
 }
 
-<<<<<<< Updated upstream
-=======
 
-
->>>>>>> Stashed changes
 void SceneGraphViewerApp::createMeshRootSignature()
 {
   // Root Parameter 0: Constant Buffer View (z. B. MVP)
@@ -2281,11 +2232,10 @@ void SceneGraphViewerApp::createMeshRootSignature()
 
   parameters[4].InitAsDescriptorTable(1, &uavRange, D3D12_SHADER_VISIBILITY_MESH);
 
-<<<<<<< Updated upstream
-=======
 
 
->>>>>>> Stashed changes
+
+
   CD3DX12_ROOT_SIGNATURE_DESC descRootSignature;
   descRootSignature.Init(_countof(parameters), parameters,
                          0, // Keine statischen Sampler
@@ -2791,11 +2741,6 @@ void SceneGraphViewerApp::queryVram()
   }
 }
 
-<<<<<<< Updated upstream
-=======
-
-
->>>>>>> Stashed changes
 void SceneGraphViewerApp::createTriangleCounterResources()
 {
   ID3D12Device* dev = getDevice().Get();
@@ -2806,13 +2751,10 @@ void SceneGraphViewerApp::createTriangleCounterResources()
     CD3DX12_RESOURCE_DESC   descUav = CD3DX12_RESOURCE_DESC::Buffer(rbSize, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
 
     dev->CreateCommittedResource(&heapDefault, D3D12_HEAP_FLAG_NONE, &descUav,
-<<<<<<< Updated upstream
+
                                  D3D12_RESOURCE_STATE_COPY_DEST, // wir nullen per Copy aus Upload
                                  nullptr, IID_PPV_ARGS(&m_triCountUAV));
-=======
-                                               D3D12_RESOURCE_STATE_COPY_DEST, // wir nullen per Copy aus Upload
-                                               nullptr, IID_PPV_ARGS(&m_triCountUAV));
->>>>>>> Stashed changes
+
   }
 
   // === 2) Readback Buffer (4 bytes) ===
@@ -2821,13 +2763,10 @@ void SceneGraphViewerApp::createTriangleCounterResources()
     CD3DX12_RESOURCE_DESC   descRb = CD3DX12_RESOURCE_DESC::Buffer(rbSize);
 
     dev->CreateCommittedResource(&heapReadback, D3D12_HEAP_FLAG_NONE, &descRb,
-<<<<<<< Updated upstream
+
                                  D3D12_RESOURCE_STATE_COPY_DEST, // Ziel von CopyResource
                                  nullptr, IID_PPV_ARGS(&m_triCountReadback));
-=======
-                                               D3D12_RESOURCE_STATE_COPY_DEST, // Ziel von CopyResource
-                                               nullptr, IID_PPV_ARGS(&m_triCountReadback));
->>>>>>> Stashed changes
+
   }
 
   // === 3) Upload Zero (4 bytes, vorab mit 0 gefüllt) ===
@@ -2835,14 +2774,9 @@ void SceneGraphViewerApp::createTriangleCounterResources()
     CD3DX12_HEAP_PROPERTIES heapUpload(D3D12_HEAP_TYPE_UPLOAD);
     CD3DX12_RESOURCE_DESC   descUp = CD3DX12_RESOURCE_DESC::Buffer(rbSize);
 
-<<<<<<< Updated upstream
     dev->CreateCommittedResource(&heapUpload, D3D12_HEAP_FLAG_NONE, &descUp, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr,
                                  IID_PPV_ARGS(&m_triZeroUpload));
-=======
-    dev->CreateCommittedResource(&heapUpload, D3D12_HEAP_FLAG_NONE, &descUp,
-                                               D3D12_RESOURCE_STATE_GENERIC_READ, nullptr,
-                                               IID_PPV_ARGS(&m_triZeroUpload));
->>>>>>> Stashed changes
+
 
     void* p = nullptr;
     // Für Upload-Heaps beim Schreiben: pReadRange = nullptr
@@ -2891,7 +2825,4 @@ void SceneGraphViewerApp::collectMeshStats()
   }
   m_triAvg = (n > 0) ? (sum / n) : std::numeric_limits<double>::quiet_NaN();
 }
-<<<<<<< Updated upstream
-=======
 
->>>>>>> Stashed changes
